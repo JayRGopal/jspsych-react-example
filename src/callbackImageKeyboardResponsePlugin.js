@@ -1,6 +1,8 @@
+
 /**
  * callback_image_keyboard_response
- * Teon L Brooks
+ * Indiamei Coren-Gold & Jay Gopal (April 2024)
+ * modified from Teon L Brooks
  * modified from Josh de Leeuw
  *
  * plugin for displaying a stimulus and getting a keyboard response
@@ -9,7 +11,6 @@
  *
  **/
 import { jsPsych } from "jspsych-react";
-
 
 var plugin = (function() {
   var plugin = {};
@@ -26,7 +27,7 @@ var plugin = (function() {
     parameters: {
       stimulus: {
         type: jsPsych.plugins.parameterType.IMAGE,
-        pretty_name: "stimulus",
+        pretty_name: "Stimulus",
         default: undefined,
         description: "The image to be displayed"
       },
@@ -115,8 +116,6 @@ var plugin = (function() {
     };
 
     // function to handle responses by the subject
-
-    const fs = require('fs');
     var after_response = function(info) {
       // after a valid response, the stimulus will have the CSS class 'responded'
       // which can be used to provide visual feedback that a response was recorded
@@ -127,10 +126,8 @@ var plugin = (function() {
 
       // only record the first response
       console.log('responded! ', info);
-      // fs.writeFile("responses.txt", JSON.stringify(info), (err) => {
-      //   if (err) throw err;
-      // })
-      const apiURL = "http://localhost:4000/saveTrial"
+      // Send the response data to a server endpoint
+      const apiURL = "http://localhost:4000/saveTrial";
       fetch(apiURL, {
         method: "POST",
         headers: {
@@ -140,7 +137,17 @@ var plugin = (function() {
         body: JSON.stringify({
           data: info
         })
-      }).then()
+      }).then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      }).then(data => {
+        console.log('Data successfully sent to the server:', data);
+      }).catch(error => {
+        console.error('There has been a problem with your fetch operation:', error);
+      });
+
       if (response.key == -1) {
         response = info;
       }
@@ -166,8 +173,7 @@ var plugin = (function() {
       jsPsych.pluginAPI.setTimeout(function() {
         display_element.querySelector(
           "#jspsych-callbackImageKeyboardResponse-stimulus"
-        ).style.visibility =
-          "hidden";
+        ).style.visibility = "hidden";
       }, trial.stimulus_duration);
     }
 
